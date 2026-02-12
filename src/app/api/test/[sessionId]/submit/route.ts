@@ -4,9 +4,10 @@ import { submitTest } from '@/features/mock/services/question-engine.service';
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { sessionId: string } }
+    { params }: { params: Promise<{ sessionId: string }> }
 ) {
     try {
+        const { sessionId } = await params;
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -18,13 +19,21 @@ export async function POST(
         }
 
         // Submit test and calculate results
-        const results = await submitTest(params.sessionId, user.id);
+        const results = await submitTest(sessionId, user.id);
 
-        // Update user total points
+        // Update user total points (fetch first to avoid raw SQL usage)
+        const { data: userData } = await supabase
+            .from('users')
+            .select('total_points')
+            .eq('id', user.id)
+            .single();
+
+        const currentPoints = userData?.total_points || 0;
+
         await supabase
             .from('users')
             .update({
-                total_points: supabase.raw(`total_points + ${results.totalPoints}`),
+                total_points: currentPoints + results.totalPoints,
             })
             .eq('id', user.id);
 

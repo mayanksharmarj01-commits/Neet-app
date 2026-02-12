@@ -3,10 +3,11 @@ import { incrementTabSwitch } from '@/features/mock/services/question-engine.ser
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { sessionId: string } }
+    { params }: { params: Promise<{ sessionId: string }> }
 ) {
     try {
-        await incrementTabSwitch(params.sessionId);
+        const { sessionId } = await params;
+        await incrementTabSwitch(sessionId);
 
         return NextResponse.json({
             success: true,

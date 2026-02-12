@@ -4,9 +4,10 @@ import { getTestSession, getRemainingTime } from '@/features/mock/services/quest
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { sessionId: string } }
+    { params }: { params: Promise<{ sessionId: string }> }
 ) {
     try {
+        const { sessionId } = await params;
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -17,7 +18,7 @@ export async function GET(
             );
         }
 
-        const session = await getTestSession(params.sessionId);
+        const session = await getTestSession(sessionId);
 
         if (!session) {
             return NextResponse.json(

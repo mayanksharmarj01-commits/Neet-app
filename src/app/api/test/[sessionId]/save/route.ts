@@ -4,9 +4,10 @@ import { updateSessionAnswers } from '@/features/mock/services/question-engine.s
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { sessionId: string } }
+    { params }: { params: Promise<{ sessionId: string }> }
 ) {
     try {
+        const { sessionId } = await params;
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -27,7 +28,7 @@ export async function POST(
         }
 
         // Update session answers
-        await updateSessionAnswers(params.sessionId, questionId, answer);
+        await updateSessionAnswers(sessionId, questionId, answer);
 
         return NextResponse.json({
             success: true,

@@ -4,9 +4,10 @@ import { submitArenaAnswers } from '@/features/arena/services/arena.service';
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { arenaId: string } }
+    { params }: { params: Promise<{ arenaId: string }> }
 ) {
     try {
+        const { arenaId } = await params;
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -20,7 +21,7 @@ export async function POST(
         const { answers, timeTakenSeconds } = await request.json();
 
         const result = await submitArenaAnswers(
-            params.arenaId,
+            arenaId,
             user.id,
             answers,
             timeTakenSeconds

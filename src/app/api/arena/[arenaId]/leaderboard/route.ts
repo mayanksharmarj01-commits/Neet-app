@@ -4,9 +4,10 @@ import { getArenaLeaderboard } from '@/features/arena/services/arena.service';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { arenaId: string } }
+    { params }: { params: Promise<{ arenaId: string }> }
 ) {
     try {
+        const { arenaId } = await params;
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -17,7 +18,7 @@ export async function GET(
             );
         }
 
-        const leaderboard = await getArenaLeaderboard(params.arenaId, user.id);
+        const leaderboard = await getArenaLeaderboard(arenaId, user.id);
 
         if (leaderboard === null) {
             return NextResponse.json({

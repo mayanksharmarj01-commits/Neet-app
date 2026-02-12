@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { arenaId: string } }
+    { params }: { params: Promise<{ arenaId: string }> }
 ) {
     const supabase = await createClient();
-    const { arenaId } = params;
+    const { arenaId } = await params;
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
