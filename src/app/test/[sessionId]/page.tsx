@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { TestInterface } from '@/features/mock/components/test-interface';
 
-export default async function TestPage({ params }: { params: { sessionId: string } }) {
+export default async function TestPage({ params }: { params: Promise<{ sessionId: string }> }) {
+    const { sessionId } = await params;
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -14,7 +15,7 @@ export default async function TestPage({ params }: { params: { sessionId: string
     const { data: session, error: sessionError } = await supabase
         .from('test_sessions')
         .select('*')
-        .eq('id', params.sessionId)
+        .eq('id', sessionId)
         .single();
 
     if (sessionError || !session) {
@@ -28,7 +29,7 @@ export default async function TestPage({ params }: { params: { sessionId: string
 
     // Check if already completed
     if (session.status === 'completed') {
-        redirect(`/test/${params.sessionId}/results`);
+        redirect(`/test/${sessionId}/results`);
     }
 
     // Fetch questions
@@ -43,12 +44,12 @@ export default async function TestPage({ params }: { params: { sessionId: string
 
     // If time expired, redirect to results
     if (remainingTime === 0) {
-        redirect(`/test/${params.sessionId}/results`);
+        redirect(`/test/${sessionId}/results`);
     }
 
     return (
         <TestInterface
-            sessionId={params.sessionId}
+            sessionId={sessionId}
             initialQuestions={questions || []}
             initialSession={{
                 answers: session.answers || {},

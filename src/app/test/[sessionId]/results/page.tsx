@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-export default async function ResultsPage({ params }: { params: { sessionId: string } }) {
+export default async function ResultsPage({ params }: { params: Promise<{ sessionId: string }> }) {
+    const { sessionId } = await params;
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -14,7 +15,7 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
     const { data: session } = await supabase
         .from('test_sessions')
         .select('*')
-        .eq('id', params.sessionId)
+        .eq('id', sessionId)
         .single();
 
     if (!session || session.user_id !== user.id) {
@@ -35,7 +36,7 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
                 negative_points
             )
         `)
-        .eq('session_id', params.sessionId);
+        .eq('session_id', sessionId);
 
     // Calculate statistics
     const totalQuestions = session.question_ids.length;
@@ -126,18 +127,18 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
                             <div
                                 key={attempt.id}
                                 className={`flex items-center justify-between p-4 rounded-lg border-2 ${attempt.is_correct
-                                        ? 'bg-green-50 border-green-200'
-                                        : attempt.user_answer !== null
-                                            ? 'bg-red-50 border-red-200'
-                                            : 'bg-gray-50 border-gray-200'
+                                    ? 'bg-green-50 border-green-200'
+                                    : attempt.user_answer !== null
+                                        ? 'bg-red-50 border-red-200'
+                                        : 'bg-gray-50 border-gray-200'
                                     }`}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${attempt.is_correct
-                                            ? 'bg-green-500 text-white'
-                                            : attempt.user_answer !== null
-                                                ? 'bg-red-500 text-white'
-                                                : 'bg-gray-400 text-white'
+                                        ? 'bg-green-500 text-white'
+                                        : attempt.user_answer !== null
+                                            ? 'bg-red-500 text-white'
+                                            : 'bg-gray-400 text-white'
                                         }`}>
                                         {index + 1}
                                     </div>
@@ -152,7 +153,7 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
                                 </div>
                                 <div className="text-right">
                                     <div className={`text-2xl font-bold ${attempt.is_correct ? 'text-green-600' :
-                                            attempt.user_answer !== null ? 'text-red-600' : 'text-gray-600'
+                                        attempt.user_answer !== null ? 'text-red-600' : 'text-gray-600'
                                         }`}>
                                         {attempt.points_earned > 0 ? '+' : ''}{attempt.points_earned}
                                     </div>
