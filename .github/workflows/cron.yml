@@ -1,0 +1,12 @@
+name: 5-Minute-Cron
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Runs every 5 minutes
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Vercel Cron Endpoint
+        run: |
+          curl -X GET https://your-app-url.vercel.app/api/cron/refresh-leaderboard \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
