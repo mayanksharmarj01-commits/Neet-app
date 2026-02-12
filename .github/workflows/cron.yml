@@ -1,0 +1,24 @@
+name: EdTech-Cron-Job
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Every 5 minutes
+  workflow_dispatch:      # Allows you to run it manually to test
+
+jobs:
+  ping-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh Leaderboard
+        run: |
+          curl -X GET "https://YOUR_VERCEL_PROJECT_URL.vercel.app/api/cron/refresh-leaderboard" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+      
+      - name: Subscription Check
+        run: |
+          curl -X GET "https://YOUR_VERCEL_PROJECT_URL.vercel.app/api/cron/subscription-check" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+
+      - name: Refresh Analytics
+        run: |
+          curl -X GET "https://YOUR_VERCEL_PROJECT_URL.vercel.app/api/cron/refresh-analytics" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
