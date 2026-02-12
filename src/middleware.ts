@@ -8,8 +8,8 @@ const publicRoutes = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/
 // Routes that require authentication
 const protectedRoutes = ['/dashboard', '/mock', '/arena', '/leaderboard', '/messaging', '/admin', '/settings'];
 
-// Routes that require consent check
-const consentRequiredRoutes = ['/dashboard', '/mock', '/arena', '/leaderboard', '/messaging'];
+// Routes that require consent check - Handled in components now
+// const consentRequiredRoutes = ['/dashboard', '/mock', '/arena', '/leaderboard', '/messaging'];
 
 export async function middleware(request: NextRequest) {
     let response = NextResponse.next({
@@ -80,97 +80,6 @@ export async function middleware(request: NextRequest) {
 
     // If user is authenticated
     if (session && session.user) {
-        // Check if session is active in database
-        const { data: dbSession } = await supabase
-            .from('user_sessions')
-            .select('*')
-            .eq('session_token', session.access_token)
-            .eq('is_active', true)
-            .single();
-
-        if (!dbSession) {
-            // Session not found or inactive - force logout
-            await supabase.auth.signOut();
-            const redirectUrl = new URL('/auth/login', request.url);
-            redirectUrl.searchParams.set('error', 'session_expired');
-            return NextResponse.redirect(redirectUrl);
-        }
-
-        // Check session expiry
-        if (new Date(dbSession.expires_at) < new Date()) {
-            await supabase.auth.signOut();
-            await supabase
-                .from('user_sessions')
-                .update({ is_active: false })
-                .eq('id', dbSession.id);
-
-            const redirectUrl = new URL('/auth/login', request.url);
-            redirectUrl.searchParams.set('error', 'session_expired');
-            return NextResponse.redirect(redirectUrl);
-        }
-
-        // Check inactivity timeout (30 minutes)
-        const lastActivity = new Date(dbSession.last_activity_at);
-        const inactivityMinutes = (Date.now() - lastActivity.getTime()) / (1000 * 60);
-
-        if (inactivityMinutes > 30) {
-            await supabase.auth.signOut();
-            await supabase
-                .from('user_sessions')
-                .update({ is_active: false })
-                .eq('id', dbSession.id);
-
-            const redirectUrl = new URL('/auth/login', request.url);
-            redirectUrl.searchParams.set('error', 'session_timeout');
-            return NextResponse.redirect(redirectUrl);
-        }
-
-        // Check if user is banned
-        const { data: userData } = await supabase
-            .from('users')
-            .select('is_banned, banned_until')
-            .eq('id', session.user.id)
-            .single();
-
-        if (userData?.is_banned) {
-            const bannedUntil = userData.banned_until ? new Date(userData.banned_until) : null;
-            if (!bannedUntil || bannedUntil > new Date()) {
-                await supabase.auth.signOut();
-                const redirectUrl = new URL('/auth/login', request.url);
-                redirectUrl.searchParams.set('error', 'account_banned');
-                return NextResponse.redirect(redirectUrl);
-            }
-        }
-
-        // Check consents for routes that require them
-        if (consentRequiredRoutes.some(route => pathname.startsWith(route))) {
-            const { data: termsConsent } = await supabase
-                .from('user_consents')
-                .select('id')
-                .eq('user_id', session.user.id)
-                .eq('consent_type', 'terms_and_conditions')
-                .single();
-
-            const { data: ageConsent } = await supabase
-                .from('user_consents')
-                .select('id')
-                .eq('user_id', session.user.id)
-                .eq('consent_type', 'age_declaration')
-                .single();
-
-            if (!termsConsent || !ageConsent) {
-                const redirectUrl = new URL('/auth/consent-required', request.url);
-                redirectUrl.searchParams.set('redirect', pathname);
-                return NextResponse.redirect(redirectUrl);
-            }
-        }
-
-        // Update last activity timestamp
-        await supabase
-            .from('user_sessions')
-            .update({ last_activity_at: new Date().toISOString() })
-            .eq('id', dbSession.id);
-
         // Redirect authenticated users away from auth pages
         if (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/signup')) {
             return NextResponse.redirect(new URL('/dashboard', request.url));
