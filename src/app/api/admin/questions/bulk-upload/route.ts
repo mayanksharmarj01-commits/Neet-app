@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { isAdmin, hasPermission } from '@/features/admin/services/admin.service';
 import { parseCSV, bulkInsertQuestions, generateCSVTemplate } from '@/features/admin/services/csv-upload.service';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
     try {
         const supabase = createClient();
