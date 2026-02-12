@@ -99,16 +99,22 @@ NEXT_PUBLIC_APP_URL=https://your-vercel-domain.vercel.app
 
 ---
 
-## ⏰ Step 4: Configure Cron Jobs
+## ⏰ Step 4: Configure Cron Jobs (GitHub Actions)
 
-Cron jobs are defined in `vercel.json` and automatically set up by Vercel upon deployment.
+We use GitHub Actions to trigger scheduled tasks reliably.
 
-**Jobs Configured:**
-1.  **Leaderboard Refresh:** Every 5 mins (`/api/cron/refresh-leaderboard`)
-2.  **Subscription Check:** Hourly (`/api/cron/subscription-check`)
-3.  **Analytics Refresh:** Every 4 hours (`/api/cron/refresh-analytics`)
+1.  **Update URL:**
+    *   Go to your GitHub repository -> `.github/workflows/cron.yml`.
+    *   Edit the file and replace `YOUR_VERCEL_PROJECT_URL` with your actual deployed Vercel URL (e.g., `https://your-project.vercel.app`).
+    *   Commit the change.
 
-> **Note:** Access these routes in browser to verify they work (might return 401 Unauthorized if visited directly without header, which is good).
+2.  **Add Secret:**
+    *   Go to **Settings** -> **Secrets and variables** -> **Actions**.
+    *   Click **New repository secret**.
+    *   **Name:** `CRON_SECRET`
+    *   **Value:** (The secure string you generated for Vercel env vars).
+
+> **Verification:** You can test the jobs manually in the **Actions** tab on GitHub by selecting the workflow and clicking **Run workflow**.
 
 ---
 
